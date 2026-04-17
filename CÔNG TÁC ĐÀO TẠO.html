@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Trắc Nghiệm Đào Tạo HVKTQS</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f9; padding: 20px; line-height: 1.6; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #1a5632; }
+        .question-block { margin-bottom: 25px; padding: 15px; border-bottom: 1px solid #eee; }
+        .question-text { font-weight: bold; margin-bottom: 10px; color: #333; }
+        .options { list-style: none; padding: 0; }
+        .option-item { margin: 5px 0; padding: 10px; border: 1px solid #ddd; border-radius: 5px; cursor: pointer; transition: 0.3s; }
+        .option-item:hover { background-color: #f0f0f0; }
+        
+        .correct { background-color: #d4edda !important; border-color: #c3e6cb !important; color: #155724; font-weight: bold; }
+        .wrong { background-color: #f8d7da !important; border-color: #f5c6cb !important; color: #721c24; font-weight: bold; }
+        
+        .feedback { font-style: italic; margin-left: 10px; }
+        .btn-reset { display: block; width: 200px; margin: 20px auto; padding: 15px; background: #1a5632; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
+        .btn-reset:hover { background: #144527; }
+        #score { text-align: center; font-size: 20px; font-weight: bold; color: #1a5632; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>TRẮC NGHIỆM QUY CHẾ ĐÀO TẠO</h1>
+    <div id="score">Điểm: 0/28</div>
+    <div id="quiz-container"></div>
+    <button class="btn-reset" onclick="initQuiz()">Làm mới (Reset)</button>
+</div>
+
+<script>
+const rawData = [
+    ["Hiện nay, Học viện đang áp dụng bao nhiêu quy chế Quy chế đào tạo trình độ đại học chính quy cho các khóa học viên quân sự đang học tại Học viện", "2", "1", "3", "4"],
+    ["Đối với học viên đào tạo trình độ thạc sĩ, học viên đào tạo theo chức vụ và học viên quân sự đào tạo trình độ đại học từ khóa 61 và văn bằng 2 khóa 15 trở đi, học phần đạt yêu cầu khi có điểm học phần như thế nào?", "Từ 5,5 đối với đào tạo trình độ thạc sĩ và 5,0 đối với đào tạo trình độ đại học, đào tạo theo chức vụ", "Từ 5,0 đối với đào tạo trình độ thạc sĩ và 4,0 đối với đào tạo trình độ đại học, đào tạo theo chức vụ", "Từ 5,5 trở lên", "Từ 5,0 trở lên"],
+    ["Theo Quy chế 7349 cho phép học viên đăng ký học cải thiện điểm đối với các học phần đạt từ:", "4,0÷5,4 điểm", "5,0÷5,4 điểm", "5,4÷6,0 điểm", ">6,0 điểm"],
+    ["Theo Quy chế 4421 cho phép học viên đăng ký học cải thiện điểm đối với các học phần đạt từ:", "5,0÷5,4 điểm", "5,0÷6,4 điểm", ">5,5 điểm", ">6 điểm"],
+    ["Điểm các học phần tốt nghiệp được coi là đạt từ:", "≥5,5 điểm", "≥5,0 điểm", "≥4,0 điểm", "≥5,4 điểm"],
+    ["Theo Quy chế 7349, điểm học phần thi lại đạt tối đa là bao nhiêu?", "5,0 điểm", "6,9 điểm", "5,5 điểm", "Không giới hạn"],
+    ["Theo Quy chế 7349, học viên diện lưu ban được bảo lưu kết quả học tập của những học phần đã học năm học trước có kết quả là:", "≥5,0 điểm", "≥6,5 điểm", "≥5,5 điểm", "≥6,0 điểm"],
+    ["Theo Quy chế 4421, học viên diện lưu ban có được phép bảo lưu điểm học phần của năm học trước không?", "Không", "Có", "Chỉ những học phần ≥6,5 điểm", "Chỉ những học phần ≥5,5 điểm"],
+    ["Điểm trung bình năm học (TBNH) của học viên đạt bao nhiêu thì bị lưu ban?", "Điểm TBNH<5,0", "Điểm TBNH<5,5", "Điểm TBNH<6,5", "Điểm TBNH<6,0"],
+    ["Theo Quy chế 4421, học viên nợ tổng số bao nhiêu tín chỉ cho đến thời điểm xét kết quả học tập thì bị lưu ban?", "≥11 TC", ">10 TC", ">9 TC", "<12 TC"],
+    ["Theo Quy chế 4421 học viên có điểm học phần tốt nghiệp dưới 5,5 có bị lưu ban không?", "Có", "Không", "Được phép thi lại", "Thi lại"],
+    ["Theo Quy chế 4421, học viên được phép lưu ban mấy lần và được phép thi lại tốt nghiệp mấy lần trong toàn khóa học?", "02 lưu ban và thi lại tốt nghiệp 01 lần", "01 lưu ban và 01 lần thi lại tốt nghiệp", "01 lưu ban và thi lại tốt nghiệp nhiều lần", "02 lưu ban và thi lại tốt nghiệp nhiều lần"],
+    ["Học viên có điểm trung bình học kỳ (TBHK) bao nhiêu thì bị thôi học?", "Bằng 0 (nếu không có lý do chính đáng)", "≤4,0 điểm", "≤5,0 điểm", "≤5,5 điểm"],
+    ["Theo Quy chế 4421, học viên được cộng điểm thưởng ĐATN tối đa là bao nhiêu điểm?", "1,0 điểm", "1,5 điểm", "2,0 điểm", "2,5 điểm"],
+    ["Theo Quy chế đào tạo tại Học viện, khi xét Học bổng Lê Quý Đôn có hạn chế số lượng không?", "Không", "Có", "Hạn chế theo ngành", "Hạn chế theo chuyên ngành"],
+    ["Học viên là lớp trưởng, phó bí thư đoàn cơ sở, bí thư liên chi đoàn, bí thư chi đoàn, bí thư chi bộ được công thêm bao nhiêu điểm vào điểm TBHK để xét học bổng?", "0,1 điểm", "0,2 điểm", "0,15 điểm", "0,3 điểm"],
+    ["Học viên đạt học bổng có yêu cầu về chuẩn ngoại ngữ không?", "Có", "Không", "Chỉ cần đạt kết quả học tập", "Có điểm thi lại"],
+    ["Theo các Quy chế đào tạo hiện nay, học viên phải có thời gian học tập trên lớp đạt bao nhiêu % mới được thi kết thúc học phần?", "80%", "70%", "75%", "60 VietNam"],
+    ["Học viên đến chậm giờ thi bao lâu thì sẽ bị cấm thi?", "Từ 15 phút trở lên", "Từ 05 phút trở lên", "Từ 10 phút trở lên", "Từ 20 phút trở lên"],
+    ["Trọng số của các điểm chuyên cần, điểm thường xuyên và điểm thi kết thúc học phần được dùng khi tính điểm học phần tương ứng là?", "1; 2; 7", "1; 3; 6", "1; 1; 8", "1; 4; 5"],
+    ["Cơ quan nào của Học viện chủ trì việc lấy ý kiến phản hồi từ người học và đơn vị sử dụng về hoạt động giảng dạy của giảng viên và chất lượng đào tạo của Học viện?", "P7", "P13", "P2", "P2 và P7"],
+    ["Theo Quy định số 285/QyĐ ngày 15/01/2026 của Học viện Kỹ thuật quân sự quy định về việc sử dụng trí tuệ nhân tạo (AI) trong các hoạt động giáo dục - đào tạo và nghiên cứu khoa học tại Học viện Kỹ thuật quân sự, với mức độ vi phạm nào người sử dụng sẽ bị xem xét xử lý kỷ luật khiển trách?", "Vi phạm nghiêm trọng hoặc tái phạm nhiều lần (02 lần trở lên).", "Vi phạm nghiêm trọng hoặc tái phạm nhiều lần (03 lần trở lên).", "Vi phạm đặc biệt nghiêm trọng gây ảnh hưởng đến quyền lợi của cá nhân hoặc cơ quan, đơn vị.", "Vi phạm nhẹ hoặc vi phạm lần đầu nhưng chưa đến mức nghiêm trọng."],
+    ["Theo Quy định số 285/QyĐ ngày 15/01/2026 của Học viện Kỹ thuật quân sự quy định về việc sử dụng trí tuệ nhân tạo (AI) trong các hoạt động giáo dục - đào tạo và nghiên cứu khoa học tại Học viện Kỹ thuật quân sự, người học KHÔNG được phép sử dụng các công cụ AI để?", "Thay thế hoàn toàn quá trình tư duy sáng tạo của bản thân.", "Hỗ trợ tìm kiếm thông tin, tài liệu tham khảo phục vụ nghiên cứu khoa học.", "Hỗ trợ tổng hợp thông tin và tạo sơ đồ duy phục vụ học tập.", "Hỗ trợ kiểm tra ngữ pháp, chính tả, dịch thuật."],
+    ["Theo Quy định số 285/QyĐ ngày 15/01/2026 của Học viện Kỹ thuật quân sự quy định về việc sử dụng trí tuệ nhân tạo (AI) trong các hoạt động giáo dục - đào tạo và nghiên cứu khoa học tại Học viện Kỹ thuật quân sự, đâu là nguyên tắc phải tuân theo khi sử dụng AI?", "Tuyệt đối không được sử dụng AI với các nội dung, thông tin quân sự khi chưa được phép của các cấp có thẩm quyền.", "Sử dụng AI vào hoạt động giáo dục - đào tạo và nghiên cứu khoa học không cần chú thích, gắn nhãn.", "Được sử dụng AI với các nội dung, thông tin quân sự khi người dùng cảm thấy không ảnh hưởng.", "Có thể sử dụng công cụ AI thay thế đánh giá chuyên môn."],
+    ["Trong Bước 4 của Thủ tục lấy ý kiến phản hồi: trình tự đúng là?", "Phát phiếu theo đầu mối lớp; phát phiếu đến các học viên; trả lời phiếu; thu phiếu theo đầu mối tiểu đoàn; thu phiếu về Ban Khảo thí và ĐBCLGD-ĐT.", "Phát phiếu theo đầu mối lớp; trả lời phiếu; phát phiếu đến các học viên; thu phiếu theo đầu mối tiểu đoàn.", "Phát phiếu đến các học viên; trả lời phiếu; phát phiếu theo đầu mối lớp; thu phiếu.", "Thu phiếu về Ban Khảo thí; phát phiếu theo đầu mối lớp."],
+    ["Khi thực hiện nhiệm vụ giám sát thi, nếu phát hiện học viên mang tài liệu, Cán bộ giám sát thực hiện:", "Phản ánh về hành vi vi phạm của học viên với cán bộ coi thi và phối hợp xử lý vi phạm theo quy chế, quy định.", "Nhắc học viên vi phạm cất tài liệu.", "Vào phòng thi thu tài liệu của học viên vi phạm.", "Đuổi học viên ra khỏi phòng thi."],
+    ["Cán bộ bám lớp bị xử lý “Khiển trách” theo QĐ 7698 khi:", "Không thực hiện đầy đủ các nội dung, nhiệm vụ bám lớp theo Quy định số 389/QyĐ-HV ngày 08/02/2023.", "Làm việc riêng hoặc có các hành động ảnh hưởng đến lớp học.", "Không phản ánh với Trực ban đào tạo.", "Không ghi chép việc chấp hành quy định."],
+    ["Trình tự xử lý khi đưa học viên lên giảng đường mà không có giảng viên giảng dạy:", "Báo cáo chỉ huy đơn vị, Phòng Đào tạo (qua Trực ban đào tạo), liên hệ với Bộ môn và giáo viên giảng dạy theo TKB, đồng thời phối hợp giải quyết.", "Báo cáo P13, P2 và chỉ huy đơn vị.", "Liên hệ với giáo viên giảng dạy.", "Đưa học viên về đơn vị."]
+];
+
+let score = 0;
+
+function shuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+}
+
+function initQuiz() {
+    score = 0;
+    document.getElementById('score').innerText = "Điểm: 0/28";
+    const container = document.getElementById('quiz-container');
+    container.innerHTML = "";
+    
+    // Xáo trộn câu hỏi
+    const shuffledQuestions = shuffle([...rawData]);
+
+    shuffledQuestions.forEach((q, index) => {
+        const questionText = q[0];
+        const correctAnswer = q[1];
+        // Xáo trộn đáp án
+        const options = shuffle(q.slice(1));
+
+        const qBlock = document.createElement('div');
+        qBlock.className = 'question-block';
+        qBlock.innerHTML = `<div class="question-text">Câu ${index + 1}: ${questionText}</div>`;
+
+        const optionsList = document.createElement('div');
+        optionsList.className = 'options';
+
+        options.forEach(opt => {
+            const optDiv = document.createElement('div');
+            optDiv.className = 'option-item';
+            optDiv.innerText = opt;
+            optDiv.onclick = function() {
+                if (qBlock.classList.contains('answered')) return;
+                
+                qBlock.classList.add('answered');
+                if (opt === correctAnswer) {
+                    optDiv.classList.add('correct');
+                    optDiv.innerHTML += ' <span class="feedback">✔️ cũng bình thường</span>';
+                    score++;
+                    document.getElementById('score').innerText = `Điểm: ${score}/28`;
+                } else {
+                    optDiv.classList.add('wrong');
+                    optDiv.innerHTML += ' <span class="feedback">❌ Con gà</span>';
+                    // Hiển thị đáp án đúng
+                    Array.from(optionsList.children).forEach(child => {
+                        if (child.innerText.split(' ✔️')[0] === correctAnswer) {
+                            child.classList.add('correct');
+                        }
+                    });
+                }
+            };
+            optionsList.appendChild(optDiv);
+        });
+
+        qBlock.appendChild(optionsList);
+        container.appendChild(qBlock);
+    });
+}
+
+// Khởi tạo lần đầu
+initQuiz();
+</script>
+
+</body>
+</html>

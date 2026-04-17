@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phần mềm Trắc nghiệm CTĐ</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f9; padding: 20px; line-height: 1.6; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #2c3e50; }
+        .question-block { margin-bottom: 30px; padding: 15px; border-bottom: 1px solid #eee; }
+        .question-text { font-weight: bold; margin-bottom: 10px; display: block; }
+        .options { list-style: none; padding: 0; }
+        .option-item { margin-bottom: 8px; padding: 10px; border: 1px solid #ddd; border-radius: 5px; cursor: pointer; transition: 0.3s; position: relative; }
+        .option-item:hover { background-color: #f0f0f0; }
+        
+        /* Trạng thái đúng */
+        .correct { background-color: #d4edda !important; border-color: #c3e6cb !important; color: #155724; }
+        .correct::after { content: " - Cũng bình thường"; font-weight: bold; }
+
+        /* Trạng thái sai */
+        .wrong { background-color: #f8d7da !important; border-color: #f5c6cb !important; color: #721c24; }
+        .wrong::after { content: " - Con gà 🐔"; font-weight: bold; }
+
+        .disabled { pointer-events: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>TRẮC NGHIỆM CÔNG TÁC ĐẢNG, CÔNG TÁC CHÍNH TRỊ</h1>
+    <div id="quiz-container"></div>
+</div>
+
+<script>
+const quizData = [
+    { q: "Chỉ thị số 855-CT/QUTW xác định triển khai Thực hiện Cuộc vận động phát huy truyền thống tài năng, Xứng danh Bộ đội Cụ Hồ thời kỳ mới theo phương châm nào?", a: ["“Cấp ủy trước, tổ chức đảng sau”, “trong trước, ngoài sau”.", "“Tổ chức đảng trước, tổ chức quần chúng sau”.", "“Tổ chức đảng trước, tổ chức quần chúng sau”, “trong trước, ngoài sau”.", "“Trên trước, dưới sau”, “trong trước, ngoài sau”."], c: 0 },
+    { q: "Chỉ thị số 855-CT/QUTW chủ trương xây dựng tác phong, phương pháp làm việc là:", a: ["“Làm hết việc, không chỉ làm hết giờ”", "“Chính quy, kỷ luật, tận tụy, chuyên nghiệp”.", "“Tận tâm, tận lực, chính quy, chuyên nghiệp”.", "“Làm việc chăm chỉ, không đứng yên tại chỗ”."], c: 0 },
+    { q: "Biểu hiện nào không phải là biểu hiện của chủ nghĩa cá nhân theo Nghị quyết số 847-NQ/QUTW Của Quân Uỷ Trung Uơng?", a: ["Ham mê cờ bạc, rượu chè, học đòi theo cái xấu, tiêu tiền hoang phí, lãng phí thời gian, tin vào những trò may rủi", "Không quan tâm đến lợi ích chung, sống ích kỷ...", "Háo danh, tự cao, tự đại, tham vọng quyền lực...", "Thổi phồng thành tích, sợ trách nhiệm, tranh công đổ lỗi."], c: 0 },
+    { q: "Ngày chính trị và văn hoá tinh thần ở cơ sở tại Học viện quy định như thế nào?", a: ["Định kỳ mỗi tháng 1 lần ở tất cả các cơ quan, đơn vị tron Học viện(cấp ban/bộ môn/đại đội hoặc tương đương), mỗi lần 1-1,5h, sau sinh hoạt chi bộ hàng tháng.", "Định kỳ mỗi tháng 1 lần ở cấp ban, bộ môn, đại đội..., mỗi lần 1-1,5h, sau sinh hoạt chi bộ hàng tháng.", "Định kỳ mỗi tháng 1 lần, tại tất cả cơ quan đơn vị, 1-1,5h, vào thứ 5 tuần cuối tháng.", "Định kỳ mỗi tháng 1 lần ở cấp ban, bộ môn, đại đội..., 1-1,5h, vào thứ 5 tuần đầu tháng."], c: 0 },
+    { q: "Điền từ: “Tư tưởng quân nhân là … của mỗi quân nhân và tập thể quân nhân phản ánh về các hoạt động quân sự,quốc phòng và các sự kiện liên quan trong một khoảng thời gian nhât định , mang dấu ấn của chủ thể;( trích Khoản 1 điều 2, quy chế công tác quản lý tư tưởng quân nhân; nắm và định hướng dư luận trong Học Viện)“", a: ["quan điểm, thái độ, suy nghĩ;", "động cơ, thái độ, lập trường;", "quan niệm, thái độ, niềm tin;", "động cơ, thái độ, ý chí;"], c: 0 },
+    { q: "Điền từ: “Giải quyết theo đúng pháp luật nhà nước, điều lệ của quân đội;bảo đảm …; lấy phương pháp giáo dục thuyết phục là chủ đạo.( trích Điểm b khoản 5 điều 7, Quy chế công tác quản lý tư tưởng của quân nhân, nắm và định hướng dư luận trong Học Viện)”", a: ["thấu tình, đạt lý", "khách quan, chính xác", "dân chủ, công bằng", "kịp thời, chính xác"], c: 0  },
+    { q: "KHoản 6, Điều 44 quy chế công tác thi đua, Khen thưởng trong Học Viện KTQS quy định chế độ kiểm tra của hội đồng Thi Đua, Khen thưởng Phương án nào KHÔNG đúng về chế độ kiểm tra của Hội đồng Thi đua - Khen thưởng?", a: ["Tổ TĐ-KT đơn vị đầu mối (trừ đơn vị quản lý học viên) kiểm tra, chấm điểm công tác thi đua, khen thưởng và phong tào thi đua quyết thắng của đơn vị mình mỗi quý một lần", "Hội đồng TĐ-KT Học viện kiểm tra các đơn vị mỗi năm 02 lần.", "Tổ TĐ-KT các hệ, tiểu đoàn quản lý học viên kiểm tra mỗi tuần một lần.", "Tổ TĐ-KT các đại đội, lớp kiểm tra chấm điểm thi đua hằng ngày."], c: 0 },
+    { q: " Theo quy chế công tác thi đua, khen thưởng trong Học Viện,nguyên tắc khen thưởng nào sau đây KHÔNG đúng?", a: ["Khen thưởng phải căn cứ vào điều kiện, tiêu chuẩn và thành tích đạt được, phải có hình thức khen thưởng mức thấp mới được khen thưởng mức cao hơn.", "Không khen thưởng nhiều lần, nhiều hình thức cho một thành tích.", "Chỉ khen thưởng cán bộ chủ trì khi đơn vị được khen thưởng hoặc hoàn thành tốt nhiệm vụ.", "Chưa khen thưởng đối tượng đang trong thời gian thi hành kỷ luật."], c: 0 },
+    { q: "Nghị Quyết 1657-NQ/QUTW ngày 20/12/2022 của Quân ủy Trung ương xác định mục tiêu giáo dục và đào tạo đáp ứng yêu cầu nhiệm vụ xây dựng Quân đội trong tình hình mới xác định là?", a: ["Tạo chuyển biến căn bản, toàn diện về chất lượng, hiệu quả công tác giáo dục và đào tạo trong Quân đội.", "Là một trong những khâu then chốt, đột phá, quyết định đến chất lượng xây dựng đội ngũ cán bộ, nhân viên chuyên môn kỹ thuật, góp phần xây dựng Quân đội nhân dân Việt Nam cách mạng, chính quy, tinh nhuệ, hiện đại, tăng cường quốc phòng, an ninh và bảo vệ Tổ quốc.", "Xây dựng hệ thống nhà trường thông minh, hiện đại, đáp ứng đào tạo nhân lực chất lượng cao.", "Đổi mới theo hướng chuẩn hóa, hiện đại hóa."], c: 0  },
+    { q: "Nghị Quyết 1659-NQ/QUTW ngày 20/12/2022 của Quân ủy Trung ương xác định mục tiêu huấn luyện cán bộ giai đoạn 2023 - 2030 như thế nào?", a: ["100% huấn luyện được theo phân cấp, 75% khá giỏi (35% giỏi).", "100% huấn luyện được theo phân cấp, 70% khá giỏi (35% giỏi).", "100% huấn luyện được theo phân cấp, 75% khá giỏi (30% giỏi).", "100% huấn luyện được theo phân cấp, 70% khá giỏi (30% giỏi)."], c: 0 },
+    { q: "Nghị Quyết 1659-NQ/QUTW ngày 20/12/2022 của Quân ủy Trung ương xác định phương châm huấn luyện là?", a: ["Huấn luyện “Cơ bản - Thiết thực – Vững chắc”, coi trọng huấn luyện đồng bộ, chuyên sâu, theo hướng hiện đại", "Cơ bản - Thiết thực - Vững chắc - Chuyên sâu, coi trọng cơ bản, đồng bộ, hiện đại.", "Cơ bản - Thiết thực - Vững chắc, coi trọng cơ bản, đồng bộ, chuyên sâu, hiện đại.", "Cơ bản - Thiết thực - Vững chắc - Chuyên sâu, coi trọng đồng bộ, chuyên sâu, hiện đại."], c: 0  },
+    { q: "Nghị Quyết 1656-NQ/QUTW ngày 20/12/2022 của Quân ủy Trung ương xác định mục tiêu chung của công tác kỹ thuật đến năm 2030 và những năm tiếp theo là?", a: ["Xây dựng ngành kỹ thuật vững mạnh, tinh gọn, thống nhất, đồng bộ, hiệu quả, góp phần xây dựng Quân đội hiện đại.", "Không để xảy ra các vụ việc mất an toàn, cháy nổ nghiêm trọng.", "Công tác kỹ thuật là nhiệm vụ trọng tâm của cấp ủy, chỉ huy.", "Bảo đảm TBKT chất lượng cao, đồng bộ vững chắc."], c: 0 },
+    { q: "Nghị Quyết 1652-NQ/QUTW ngày 20/12/2022 của Quân ủy Trung ương xác định chỉ tiêu cụ thể về số lượng công bố khoa học như thế nào? ", a: ["Số lượng công bố khoa học tăng trung bình trên 5%/năm.", "Số lượng công bố khoa học tăng trung bình trên  3-5%/năm.", "Số lượng công bố khoa học tăng trung bình trên  5 - 7%/năm.", "Số lượng công bố khoa học tăng trung bình trên  7 - 9%/năm."], c: 0 },
+    { q: "Vùng đặc quyền kinh tế tính từ đường cơ sở bao nhiêu hải lý?", a: ["200 hải lý.", "150 hải lý.", "250 hải lý.", "300 hải lý."], c: 0 },
+    { q: "Lãnh hải của nước CHXHCN Việt Nam rộng bao nhiêu hải lý tính từ đường cơ sở?", a: ["12 hải lý", "10 hải lý", "8 hải lý", "14 hải lý"], c: 0 },
+    { q: "Đồng chí cho biết các đối tượng cần thẩm tra, xác minh lý lịch trước khi xem xét, kết nạp quần chúng vào Đảng theo Hướng dẫn số 06-HD/TW ngày 09/6/2025 của Ban Bí thư về một số vấn đề cụ thể thi hành Điều lệ Đảng gồm những ai?", a: ["Người vào Đảng; cha, mẹ đẻ; cha, mẹ vợ (chồng) hoặc người trực tiếp nuôi dưỡng bản thân; vợ hoặc chồng, con đẻ của người vào Đảng có năng lực hành vi dân sự đầy đủ.", "Người vào Đảng; cha, mẹ đẻ, cha, mẹ vợ (chồng); ông, bà nội, ngoại; vợ hoặc chồng, con đẻ của người vào Đảng có năng lực hành vi dân sự đầy đủ.	", "Người vào Đảng; cha mẹ đẻ; cha mẹ vợ/chồng hoặc người nuôi dưỡng; ông bà nội ngoại; vợ/chồng; con đẻ.", "Người vào Đảng; cha mẹ đẻ; cha mẹ vợ/chồng; vợ/chồng; con đẻ có năng lực dân sự."], c: 0  },
+    { q: "Theo quy định thi hành Điều lệ Đảng hiện nay, người giới thiệu quần chúng ưu tú vào Đảng phải là? ", a: ["Là đảng viên chính thức, cùng công tác, lao động, học tập hoặc cùng sinh hoạt nơi cư trú ít nhất 12 tháng với người được giới thiệu vào Đảng trong cùng một đơn vị thuộc phạm vi lãnh đạo của đảng bộ, chi bộ cơ sở. ", "Đảng viên cùng công tác 12 tháng trở lên.", "Đảng viên chính thức, cùng công tác/sinh hoạt 12 tháng trở lên.", "Đảng viên cùng công tác 06 tháng trở lên."], c: 0 },
+    { q: "Theo quy định thi hành Điều lệ Đảng hiện nay, trong thời hạn bao nhiêu ngày kể từ ngày cấp có thẩm quyền ra Quyết định kết nạp, chi bộ phải tổ chức lễ kết nạp cho đảng viên?", a: ["30 ngày làm việc", "15 ngày làm việc.", "45 ngày làm việc.", "60 ngày làm việc."], c: 0 },
+    { q: "Chi bộ họp xét đề nghị công nhận đảng viên chính thức, được bao nhiêu đảng viên biểu quyết đồng ý thì chi bộ ra nghị quyết đề nghị cấp uỷ cấp trên công nhận đảng viên chính thức?", a: ["Được từ 2/3 đảng viên chính thức trở lên đồng ý.", "Trên 2/3 đảng viên chính thức trở lên đồng ý.", "Từ 1/2 đảng viên chính thức trở lên đồng ý.", "Trên 1/2 đảng viên chính thức trở lên đồng ý."], c: 0  },
+    { q: "Số lượng đảng viên xếp loại “Hoàn thành xuất sắc nhiệm vụ” tối đa không vượt quá bao nhiêu % tổng số đảng viên hoàn thành tốt nhiệm vụ trở lên?", a: ["20%", "10%", "15%", "30%"], c: 0 },
+    { q: "Đồng chí cho biết theo Hướng dẫn số 2751/HD-CT ngày 11/8/2016 của Phòng Chính trị, chế độ ra nghị quyết cấp chi bộ được quy định như thế nào?", a: ["Ra nghị quyết lãnh đạo toàn diện năm học, học kỳ II; hằng tháng ra nghị quyết lãnh đạo thực hiện một số nhiệm vụ trọng tâm, khắc phục khâu yếu, mặt yếu.", "Toàn diện năm học, 6 tháng cuối năm; hàng tháng bổ sung nhiệm vụ.", "Toàn diện năm học; hàng tháng ra nghị quyết hoặc kết luận bổ sung.", "Toàn diện năm học; 6 tháng cuối năm; hàng tháng nghị quyết trọng tâm."], c: 0  },
+    { q: "Đảng viên vi phạm trường hợp nào sau đây thì đề nghị cấp có thẩm quyền xóa tên trong danh sách đảng viên?", a: ["Đảng viên tự ý trả thẻ đảng viên hoặc tự hủy thẻ đảng viên.", "Vắng sinh hoạt chi bộ ba tháng trong năm.", "Vi phạm kỷ luật phải xử lý.", "Vi phạm tư cách đảng viên."], c: 0 },
+    { q: "Điều lệ Đảng hiện hành quy định các hình thức kỷ luật đối với đảng viên chính thức là gì?  ", a: ["Khiển trách, cảnh cáo, cách chức, khai trừ.", "Khiển trách, cảnh cáo, xóa tên, khai trừ.", "Khiển trách, cảnh cáo, xóa tên, cách chức.", "Khiển trách, cảnh cáo, khai trừ, hạ bậc lương."], c: 0 },
+    { q: "Chỉ tiêu kết quả học tập trung bình hằng năm và toàn khóa của học viên KSQS được xác định trong Nghị quyết Đại hội đại biểu Đảng bộ Học viện lần thứ XI, nhiệm kỳ 2025-2030 được xác định như thế nào?", a: ["100% đạt yêu cầu, trong đó có từ 70% khá, giỏi trở lên", "100% đạt yêu cầu, 60% khá giỏi trở lên", "100% đạt yêu cầu, 65% khá giỏi trở lên", "100% đạt yêu cầu, 75% khá giỏi trở lên"], c: 0 },
+    { q: "Chỉ tiêu về chuẩn ngoại ngữ đối với học viên KSQS được xác định trong Nghị quyết Đại hội đại biểu Đảng bộ Học viện lần thứ XI, nhiệm kỳ 2025-2030 được xác định như thế nào?", a: ["100% học viên KSQS chất lượng cao đạt chuẩn tiếng Anh B2 quốc tế; 100% học viên KSQS đạt chuẩn tiếng Anh B1 quốc tế trở lên, trong đó có trên 40% đạt chuẩn tiếng Anh B2 quốc tế.", "100% CLC và đại trà đạt B1 trở lên (trong đó 40% đạt B2).", "100% CLC đạt B2; 100% đại trà đạt B1 trở lên (trong đó 50% đạt B2).", "100% CLC và đại trà đạt B1 trở lên (trong đó 50% đạt B2)."], c: 0 },
+    { q: "Chỉ tiêu về kết quả đánh giá, xếp loại chất lượng tổ chức đảng, đảng viên hằng năm được xác định trong Nghị quyết Đại hội đại biểu Đảng bộ Học viện lần thứ XI, nhiệm kỳ 2025-2030 được xác định như thế nào?", a: ["100% cấp ủy, tổ chức đảng, 100% đảng viên hoàn thành nhiệm vụ trở lên, trên 85% cấp ủy, tổ chức đảng, trên 95% đảng viên hoàn thành tốt nhiệm vụ trở lên.", "100% HTNV; trên 80% tổ chức và 90% đảng viên HTTNV.", "100% HTNV; trên 85% tổ chức và 90% đảng viên HTTNV.", "100% HTNV; trên 80% tổ chức và 95% đảng viên HTTNV."], c: 0  },
+    { q: "Theo Hướng dẫn số 3552/HD-CT ngày 06/9/2022 của Phòng Chính trị về công tác Quy hoạch cán bộ chỉ huy, quản lý các cấp trong Học viện Kỹ thuật quân sự, công tác quy hoạch cán bộ CHQL các cấp phải đảm bảo bao nhiêu nguyên tắc?", a: ["3", "2", "4", "5"], c: 0  },
+    { q: "Theo Hướng dẫn số 3552/HD-CT ngày 06/9/2022 của Phòng Chính trị về công tác Quy hoạch cán bộ chỉ huy, quản lý các cấp trong Học viện Kỹ thuật quân sự, mỗi chức danh quy hoạch tối đa bao nhiêu nguồn (bao gồm cả đối tượng 1 và đối tượng 2)?", a: ["3", "2", "4", "5"], c: 0 },
+    { q: "Một cán bộ được quy hoạch tối đa bao nhiêu chức danh ở cùng cấp?", a: ["3", "2", "4", "5"], c: 0 },
+    { q: "Khi muốn bổ nhiệm chức vụ CHQL trực thuộc Học viện, cấp ủy trực thuộc Đảng bộ Học viện có phải xin chủ trương của Thường vụ ĐUHV trước khi làm quy trình bổ nhiệm cán bộ không?", a: ["Có", "Không", "Tùy chức vụ", "Sai cả 3"], c: 0 },
+    { q: "Theo Quy chế số 1508-QC/ĐU, quy trình bổ nhiệm chức vụ cán bộ CHQL đối với Đảng ủy cơ sở từ nguồn tại chỗ gồm bao nhiêu bước?", a: ["3", "4", "5", "2"], c: 0  },
+    { q: "Theo Quy chế số 1508-QC/ĐU, quy trình bổ nhiệm chức vụ cán bộ CHQL đối với Chi bộ có chi ủy từ nguồn tại chỗ gồm bao nhiêu bước?", a: ["3", "2", "4", "5"], c: 0  },
+    { q: "Theo Thông tư số 18/2025/TT-BQP ngày 22/3/2025 của Bộ Quốc phòng quy định phong quân hàm học viên tốt nghiệp đào tạo sĩ quan tại ngũ; thăng quân hàm sĩ quan cấp tá, cấp úy vượt bậc, trước thời hạn và nâng lương sĩ quan trước thời hạn, nếu trong niên hạn quân hàm mà cán bộ có từ 01 năm trở lên đánh giá, xếp loại cán bộ từ mức HTNV trở xuống, thì có đủ điều kiện xét thăng quân hàm, nâng lương trước thời hạn không?", a: ["Không đủ điều kiện", "Đủ điều kiện", "Tùy thành tích", "Tùy kết quả năm còn lại"], c: 0 },
+    { q: "Theo Quy chế quản lý học viên quân sự tại HVKTQS ban hành kèm theo Quyết định số 4307/QĐ-HV ngày 13/11/2019, nếu học viên trong tháng cuối của năm học bị kỷ luật hình thức khiển trách thì kết quả xếp loại rèn luyện của năm học như thế nào?", a: ["Không vượt quá loại Trung bình", "Không vượt quá loại Khá", "Không vượt quá loại Yếu", "Không vượt quá loại Trung bình khá"], c: 0 },
+    { q: "Theo Quy định số 389/QyĐ-HV ngày 08/02/2023 của Học viện Kỹ thuật quân sự về việc thực hiện bám lớp, nắm tình hình học tập trên giảng đường, thao trường, bãi tập của cán bộ quản lý học viên, giảng viên tại Học viện Kỹ thuật quân sự, nếu đơn vị đại đội có 03 cán bộ trở lên (kể cả cán bộ thực tế), thì thường xuyên có bao nhiêu cán bộ bám lớp trên giảng đường hoặc thao trường, bãi tập?", a: ["02", "01", "03", "Tùy Tiểu đoàn trưởng"], c: 0 },
+    { q: "Trong trường hợp buộc cho thôi học áp dụng với học viên sức khỏe yếu hoặc mắc bệnh phải điều trị dài ngày, mắc bệnh hiểm nghèo đã được điều trị khỏi bệnh nhưng Hội đồng giám định sức khỏe kết luận không đủ tiêu chuẩn sức khỏe tiếp tục học tập thì học viên có phải bồi hoàn chi phí đào tạo hay không ?", a: ["Không", "Có", "Không quy định", "Có nhưng tùy năm phục vụ"], c: 0 },
+    { q: "Đánh giá, phân loại kết quả rèn luyện học viên được thực hiện trên cơ sở xét kết quả của bao nhiêu tiêu chí phân loại (Theo Thông tư số 15/2018/TT-BQP ngày 03/02/2018 của Bộ Quốc phòng ban hành Quy chế quản lý học viên quân sự trong nhà trường Quân đội)?", a: ["3", "4", "5", "2"], c: 0  },
+    { q: "Ngoài chế độ nghỉ phép hằng năm, quân nhân, công nhân và viên chức quốc phòng được nghỉ phép đặc biệt trong trường hợp nào?", a: ["Bản thân kết hôn hoặc con đẻ, con nuôi hợp pháp kết hôn; Gia đình gặp khó khăn đột xuất do vợ hoặc chồng; con đẻ, con nuôi hợp pháp; bố, mẹ, người nuôi dưỡng hợp pháp của bản thân, của vợ hoặc của chồng bị đau ốm nặng, tai nạn rủi ro, hy sinh, từ trần hoặc bị thiệt hại nặng về tài sản do thiên tai, hỏa hoạn, dịch bệnh nguy hiểm gây ra.", "Bản thân kết hôn, anh chị em ruột đau ốm nặng.", "Vợ sinh con", "Cả 3 phương án"], c: 0 },
+    { q: "Quy định về đối tượng, tiêu chuẩn đào tạo cán bộ Quân đội nhân dân Việt Nam hiện nay được áp dụng theo Thông tư nào?", a: ["Thông tư số 06/2025/TT-BQP ngày 26/01/2025 của Bộ Quốc phòng.", "02/2023/TT-BQP", "18/2025/TT-BQP", "05/2025/TT-BQP"], c: 0  },
+    { q: "Quy định tiêu chuẩn, định lượng tiền ăn và mức tiền ăn cơ bản bộ binh; quân chủng, binh chủng, bệnh nhân điều trị, học viên quân sự quốc tế; ăn thêm ngày lễ, tết, khi làm nhiệm vụ; chế độ an, bồi dưỡng hàng năm hiện nay được áp dụng theo Thông tư nào?", a: ["96/2025/TT-BQP", "56/2025/TT-BQP", "168/2021/TT-BQP", "78/2020/TT-BQP"], c: 0  },
+    { q: "Đại úy/Thượng úy đi an điều dưỡng được mang theo không quá bao nhiêu người gia đình?", a: ["4 người", "3 người", "5 người", "6 người"], c: 0  },
+    { q: "Học viên lấy cắp tài sản 1 lần bị xử lý kỷ luật hình thức nào?", a: ["Buộc thôi học", "Khiển trách", "Cảnh cáo", "Tước danh hiệu quân nhân"], c: 0 },
+    { q: "Khái niệm “tuổi quân” có được công nhận chính thức trong QĐNDVN không?", a: ["Có", "Không", "Chỉ đơn vị dự toán", "Chỉ đơn vị hạch toán"], c: 0  },
+    { q: "Quân nhân được hưởng chế độ ăn thêm bao nhiêu ngày lễ, tết trong năm?", a: ["12", "11", "10", "14"], c: 0 },
+    { q: "Học viên kỹ sư quân sự tốt nghiệp được xét phong Thượng úy nếu:", a: ["Tốt nghiệp Xuất sắc, là CSTĐ toàn quân, là Đảng viên chính thức.", "Tốt nghiệp Xuất sắc, là Đảng viên chính thức.", "Tốt nghiệp Giỏi, được Huân chương Chiến công.", "Tốt nghiệp Giỏi, được Huân chương Chiến công, là Đảng viên chính thức."], c: 0 },
+    { q: "Học viên kỹ sư quân sự tốt nghiệp được xem xét phong Trung úy nếu:", a: ["Tốt nghiệp Khá trở lên, rèn luyện tốt, là Đảng viên chính thức.", "Tốt nghiệp Khá trở lên.", "Tốt nghiệp Giỏi.", "Tốt nghiệp Khá trở lên, là Đảng viên chính thức."], c: 0  },
+    { q: "Học viên sử dụng văn bằng chứng chỉ giả bị xử lý thế nào?", a: ["Buộc thôi học", "Khiển trách", "Cảnh cáo", "Tước danh hiệu quân nhân."], c: 0 },
+    { q: "Trang bị, vật tư CTĐ, CTCT “Loại 2” là gì?", a: ["Còn niên hạn, đang sử dụng", "Mới chưa sử dụng", "Hết niên hạn, hỏng, chờ thanh lý", "Hết niên hạn nhưng còn dùng tạm"], c: 0 },
+    { q: "Hệ thống văn kiện CTĐ, CTCT cấp Đại đội gồm bao nhiêu loại sổ?", a: ["12", "8", "10", "14"], c: 0  },
+    { q: "Hệ thống văn kiện CTĐ, CTCT cấp Đại đội gồm bao nhiêu loại tài liệu đánh máy?", a: ["8", "10", "12", "14"], c: 0  },
+    { q: "Chế độ sinh hoạt của chiến sĩ bảo vệ thực hiện thế nào?", a: ["1 tuần/lần", "2 tuần/lần", "1 tháng/lần", "3 ngày/lần"], c: 0  },
+    { q: "Đối tượng nắm và quản lý tình hình chính trị gồm:", a: ["Cơ quan, đơn vị, vụ việc, hiện tượng và con người.", "Cơ quan, đơn vị, vụ việc và con người.", "Cơ quan, đơn vị, vụ việc, hiện tượng, địa bàn và con người.", "Vụ việc, hiện tượng, địa bàn và con người."], c: 0  },
+    { q: "Khi xử lý vụ việc tại chỗ, điều đầu tiên cần làm là gì?", a: ["Cấp cứu, bảo vệ người/tài sản.", "Tạm giữ người/phương tiện.", "Ngăn chặn vụ việc không để diễn biến tiếp tục gây hại.", "Ngăn chặn diễn biến gây hại và nhanh chóng cấp cứu bảo vệ."], c: 0  },
+    { q: "Nội dung nào là tư tưởng Hồ Chí Minh về dân vận?", a: ["“Việc dân vận rất quan trọng. Dân vận kém thì việc gì cũng kém, dân vận khéo thì việc gì cũng thành công”.", "“Công tác dân vận rất quan trọng...”", "“Việc dân vận rất quan trọng... dân vận tốt thì việc gì cũng thành công”.", "“Công tác vận rất quan trọng...”"], c: 0 },
+    { q: "Công tác dân vận là trách nhiệm của ai?", a: ["Các cơ quan, tổ chức, cá nhân trong hệ thống chính trị", "Ban Dân vận các cấp", "Chính quyền, MTTQ và các đoàn thể", "MTTQ và các đoàn thể"], c: 0 },
+    { q: "Các hình thức công tác dân vận trong Quân đội (Quy chế 718)?", a: ["Kết nghĩa; dã ngoại; tổ đội công tác; tăng cường cán bộ...", "Kết nghĩa; dã ngoại; tăng cường cán bộ...", "Kết nghĩa; tổ đội công tác; tăng cường cán bộ...", "Dã ngoại; tăng cường cán bộ..."], c: 0 },
+    { q: "Giải pháp trong Nghị quyết 124 của Đảng ủy Học viện về dân vận?", a: ["Củng cố tổ chức, bồi dưỡng năng lực, đầu tư cơ sở vật chất.", "Củng cố tổ chức, bồi dưỡng năng lực cán bộ.", "Củng cố đội ngũ, đầu tư cơ sở vật chất.", "Đầu tư cơ sở vật chất."], c: 0 },
+    { q: "Đoàn cơ sở tại các Tiểu đoàn quản lý học viên là Đoàn cơ sở mấy cấp?", a: ["3 cấp", "2 cấp", "1 cấp", "Không cấp nào"], c: 0  },
+    { q: "Liên chi đoàn được bố trí tại cấp đơn vị quản lý học viên nào?", a: ["Đại đội, Lớp tạo nguồn.", "Tiểu đoàn (Hệ)", "Lớp chuyên ngành", "Cấp Đại đội"], c: 0  },
+    { q: "Phong trào hành động cách mạng của Thanh niên Quân đội 2026 - 2031?", a: ["3 tiên phong quyết thắng", "Rèn đức luyện tài, xung kích sáng tạo, xứng danh Bộ đội Cụ Hồ...", "Rèn đức luyện tài, xung kích sáng tạo, quyết thắng", "3 đỉnh cao quyết thắng"], c: 0  }
+];
+
+function shuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+}
+
+function renderQuiz() {
+    const container = document.getElementById('quiz-container');
+    container.innerHTML = ''; // Xóa trắng để vẽ lại khi cần
+    quizData.forEach((data, index) => {
+        const qBlock = document.createElement('div');
+        qBlock.className = 'question-block';
+        qBlock.innerHTML = `
+            <span class="question-text">Câu ${index + 1}: ${data.q}</span>
+            <ul class="options" id="q${index}">
+                ${data.a.map((opt, i) => `
+                    <li class="option-item" onclick="checkAnswer(${index}, ${i})">
+                        ${String.fromCharCode(65 + i)}. ${opt}
+                    </li>
+                `).join('')}
+            </ul>
+        `;
+        container.appendChild(qBlock);
+    });
+}
+
+function checkAnswer(qIdx, choiceIdx) {
+    const optionsList = document.getElementById(`q${qIdx}`).getElementsByTagName('li');
+    const item = quizData[qIdx];
+    const correctIdx = item.c;
+
+    // 1. Hiển thị đúng/sai cho người dùng thấy
+    for (let li of optionsList) {
+        li.classList.add('disabled');
+    }
+
+    if (choiceIdx === correctIdx) {
+        optionsList[choiceIdx].classList.add('correct');
+    } else {
+        optionsList[choiceIdx].classList.add('wrong');
+        optionsList[correctIdx].classList.add('correct');
+    }
+
+    // 2. Tự động đổi vị trí đáp án sau khi xem kết quả (sau 2 giây)
+    setTimeout(() => {
+        const currentCorrectContent = item.a[item.c]; // Lưu lại nội dung đáp án đúng
+        shuffle(item.a);                             // Xáo trộn mảng đáp án
+        item.c = item.a.indexOf(currentCorrectContent); // Cập nhật lại vị trí đúng mới
+        
+        // Vẽ lại riêng khối câu hỏi đó
+        renderSingleQuestion(qIdx);
+    }, 2000); 
+}
+
+// Hàm vẽ lại chỉ 1 câu hỏi để tránh giật trang
+function renderSingleQuestion(index) {
+    const optionsUl = document.getElementById(`q${index}`);
+    const data = quizData[index];
+    optionsUl.innerHTML = data.a.map((opt, i) => `
+        <li class="option-item" onclick="checkAnswer(${index}, ${i})">
+            ${String.fromCharCode(65 + i)}. ${opt}
+        </li>
+    `).join('');
+}
+
+// Chạy lần đầu
+renderQuiz();
+</script>

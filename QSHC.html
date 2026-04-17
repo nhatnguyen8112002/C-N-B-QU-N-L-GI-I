@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Trắc Nghiệm Tổng Hợp 60 Câu</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; padding: 20px; line-height: 1.6; }
+        .container { max-width: 900px; margin: auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #1b5e20; text-transform: uppercase; margin-bottom: 10px; border-bottom: 3px solid #1b5e20; padding-bottom: 10px; }
+        #score { position: sticky; top: 10px; text-align: center; font-size: 24px; font-weight: bold; color: #fff; background: #2e7d32; padding: 15px; border-radius: 50px; margin-bottom: 25px; z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        .question-block { margin-bottom: 35px; padding: 25px; border: 1px solid #e0e0e0; border-radius: 12px; background: #fff; transition: transform 0.2s; }
+        .question-block:hover { border-color: #81c784; }
+        .question-text { font-weight: bold; margin-bottom: 15px; color: #2c3e50; font-size: 18px; }
+        .options { display: flex; flex-direction: column; gap: 12px; }
+        .option-item { padding: 14px 18px; border: 2px solid #eee; border-radius: 8px; cursor: pointer; transition: all 0.2s; background: #fdfdfd; font-size: 16px; }
+        .option-item:hover { background-color: #f1f8e9; border-color: #a5d6a7; }
+        .correct { background-color: #4caf50 !important; color: white !important; border-color: #388e3c !important; font-weight: bold; }
+        .wrong { background-color: #f44336 !important; color: white !important; border-color: #d32f2f !important; font-weight: bold; }
+        .feedback { font-weight: bold; margin-left: 10px; text-decoration: underline; font-style: italic; }
+        .btn-reset { display: block; width: 280px; margin: 40px auto; padding: 18px; background: #1b5e20; color: white; border: none; border-radius: 50px; cursor: pointer; font-size: 18px; font-weight: bold; text-transform: uppercase; transition: background 0.3s; }
+        .btn-reset:hover { background: #003300; }
+        .answered { pointer-events: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>HỆ THỐNG TRẮC NGHIỆM TỔNG HỢP (60 CÂU)</h1>
+    <div id="score">Đúng: 0 / 60</div>
+    <div id="quiz-container"></div>
+    <button class="btn-reset" onclick="initQuiz()">Làm lại bài thi (Reset)</button>
+</div>
+
+<script>
+// Tổng hợp 60 câu hỏi từ các lĩnh vực: Đào tạo, HCKT, KHQS và QSHC
+const fullDatabase = [
+    // Lĩnh vực Đào tạo [cite: 1]
+    ["Hiện nay, Học viện đang áp dụng bao nhiêu quy chế Quy chế đào tạo trình độ đại học chính quy cho các khóa học viên quân sự đang học tại Học viện?", "2", "1", "3", "4"],
+    ["Theo Quy chế 7349 cho phép học viên đăng ký học cải thiện điểm đối với các học phần đạt từ:", "4,0÷5,4 điểm", "5,0÷5,4 điểm", "5,4÷6,0 điểm", ">6,0 điểm"],
+    ["Điểm các học phần tốt nghiệp được coi là đạt từ:", "≥5,5 điểm", "≥5,0 điểm", "≥4,0 điểm", "≥5,4 điểm"],
+    ["Theo Quy chế 7349, điểm học phần thi lại đạt tối đa là bao nhiêu?", "5,0 điểm", "6,9 điểm", "5,5 điểm", "Không giới hạn"],
+    ["Điểm trung bình năm học (TBNH) của học viên đạt bao nhiêu thì bị lưu ban?", "Điểm TBNH < 5,0", "Điểm TBNH < 5,5", "Điểm TBNH < 6,5", "Điểm TBNH < 6,0"],
+    ["Theo Quy chế 4421, học viên nợ tổng số bao nhiêu tín chỉ cho đến thời điểm xét kết quả học tập thì bị lưu ban?", "≥11 TC", ">10 TC", ">9 TC", "<12 TC"],
+    ["Theo Quy chế 4421, học viên được phép lưu ban mấy lần và được phép thi lại tốt nghiệp mấy lần trong toàn khóa học?", "01 lưu ban và 01 lần thi lại tốt nghiệp", "01 lưu ban và thi lại tốt nghiệp nhiều lần", "02 lưu ban và thi lại tốt nghiệp nhiều lần", "02 lưu ban và thi lại tốt nghiệp 01 lần"],
+    ["Thời gian học tập trên lớp đạt bao nhiêu % mới được thi kết thúc học phần?", "80%", "70%", "75%", "60%"],
+    ["Học viên đến chậm giờ thi bao lâu thì sẽ bị cấm thi?", "Từ 15 phút trở lên", "Từ 05 phút trở lên", "Từ 10 phút trở lên", "Từ 20 phút trở lên"],
+    ["Trọng số của các điểm chuyên cần, điểm thường xuyên và điểm thi kết thúc học phần được dùng khi tính điểm học phần tương ứng là?", "1; 2; 7", "1; 3; 6", "1; 1; 8", "1; 4; 5"],
+
+    // Lĩnh vực Hậu cần - Kỹ thuật [cite: 2]
+    ["Quy định an toàn khi khi cất giữ vũ khí? Đồng chí hãy chọn phương án đúng.", "Nơi cất giữ phải bảo đảm an toàn. Thực hiện cất giữ chìa khoá kho, tủ súng theo quy định.", "Lắp đạn vào súng, tháo áo súng và thực hiện tốt chế độ bảo quản thường xuyên.", "Súng huấn luyện, súng sẵn sàng chiến đấu, súng niêm cất phải sắp xếp, cất giữ chung với nhau.", "Giao chìa khóa tủ súng cho 1 đồng chí chỉ huy đơn vị cất giữ."],
+    ["Cấm sử dụng những loại đạn nào sau đây? Đồng chí hãy chọn phương án đúng.", "Đạn không rõ nguồn gốc, xuất xứ, nghi ngờ về chất lượng, đạn thuộc lô nguy hiểm thông báo cấm dùng của cơ quan nghiệp vụ.", "Đạn đã được kiểm tra kỹ thuật, phân cấp chất lượng đạt cấp 2.", "Đạn mới được sản xuất, còn nguyên trong hòm hộp.", "Đạn có nguồn gốc, xuất xứ, rõ ràng, chất lượng tốt."],
+    ["Chìa khóa trên tủ súng và chìa khóa vòng cò do ai quản lý (theo HD 94)?", "Trực chỉ huy Hệ, Tiểu đoàn", "Trực ban Hệ, Tiểu đoàn", "Hệ trưởng, Tiểu đoàn trưởng", "Phó Hệ trưởng, Phó Tiểu đoàn trưởng"],
+    ["Kiểm tra kỹ thuật nhằm mục đích chủ yếu nào?", "Phát hiện, đánh giá tình trạng VKTBKT", "Đánh giá cán bộ", "Phục vụ thanh tra", "Thống kê số lượng"],
+    ["Định mức sử dụng điện năng cho sinh hoạt của Học viên quân sự đào tạo dài hạn là bao nhiêu mỗi tháng?", "41KWh/người/tháng", "40KWh/người/tháng", "42KWh/người/tháng", "43KWh/người/tháng"],
+    ["Theo Thông tư số 96/2025/TT-BQP, Tiền ăn cơ bản của chiến sỹ bộ binh hiện nay là:", "81.000đ", "72.000đ", "65.000đ", "101.000đ"],
+    ["Chế độ điểm nghiệm quân trang cấp đại đội quy định như thế nào?", "3 tháng/1 lần", "1 tuần/1 lần", "1 tháng/1 lần", "6 tháng/1 lần"],
+    ["Tỷ lệ nuôi quân đối với bếp dBB đủ quân (TT 38/2017) là:", "1 nuôi quân phục vụ 25 người ăn", "1 nuôi quân phục vụ 30 người ăn", "1 nuôi quân phục vụ 20 người ăn", "1 nuôi quân phục vụ 22 người ăn"],
+    ["Bù nước thế nào là đúng cách để dự phòng say nắng, say nóng?", "Bù đủ số lượng nước; uống sớm từng lượng nhỏ, cách nhau 15-20 phút/lần.", "Uống nước khi khát, uống đến khi hết khát.", "Uống từ 0,5 – 1 lít nước trong quá trình luyện tập.", "Chỉ uống khi thấy cơ thể quá nóng."],
+    ["Mức độ hiệu quả các thuốc hạ sốt thông thường trong điều trị say nóng, say nắng?", "Các thuốc hạ sốt thông thường rất ít có hiệu quả trong điều trị say nóng, say nắng.", "Các thuốc hạ sốt thông thường có hiệu quả cao.", "Các thuốc hạ sốt thông thường tương đối hiệu quả.", "Không có tác dụng gì."],
+
+    // Lĩnh vực Quân sự chung [cite: 4]
+    ["Khoản 3, Điều 36 Điều lệnh Quản lý bộ đội QĐNDVN quy định: Cấm quân nhân uống rượu, bia trong khi...?", "Học tập, công tác", "Nghỉ ngơi tại đơn vị", "Đi tranh thủ", "Thăm người thân"],
+    ["Điều 50 Điều lệnh Quản lý bộ đội QĐNDVN quy định thời gian tập thể dục buổi sáng bao nhiêu phút?", "20 phút", "15 phút", "25 phút", "30 phút"],
+    ["Điều 57 Điều lệnh Quản lý bộ đội QĐNDVN quy định thời gian điểm danh hoặc điểm quân số không quá bao nhiêu phút?", "Không quá 30 phút", "Không quá 20 phút", "Không quá 25 phút", "Không quá 45 phút"],
+    ["Thông tư 143/2023/TT-BQP ngày 27/12/2023 gồm bao nhiêu Chương, Điều?", "5 Chương, 60 điều", "5 Chương, 59 điều", "4 Chương, 60 điều", "4 Chương, 49 điều"],
+    ["Thời hiệu xử lý kỷ luật đối với hình thức khiển trách theo Thông tư 143/2023/TT-BQP là bao nhiêu năm?", "2 năm", "1 năm", "3 năm", "5 năm"],
+    ["Hình thức kỷ luật đối với người đào ngũ theo Khoản 1, Điều 21 Thông tư 143/2023/TT-BQP là?", "Cảnh cáo, hạ bậc lương", "Khiển trách, cảnh cáo", "Cảnh cáo, giáng chức", "Cách chức, giáng chức"],
+    ["Theo Công văn 5566/HV-VP, thời gian học viên là HSQ-BS được phép sử dụng điện thoại di động trong giờ nghỉ ngày hành chính là?", "16h45 - 18h45", "16h30 - 18h30", "16h30 - 18h45", "16h45 - 18h30"],
+    ["Thời gian chào cờ cấp hệ, tiểu đoàn tại Điều 14 Quyết định 1700/QĐ-HV quy định thế nào?", "Không quá 30 phút, kể cả thông báo chính trị", "Không quá 30 phút", "Không quá 45 phút", "Không quá 20 phút"],
+    ["Thời gian canh gác ban đêm mỗi ca gác của học viên tại Điều 34 Quyết định 1700/QĐ-HV như thế nào?", "Không quá 02 giờ", "Không quá 01 giờ", "Không quá 01 giờ 30 phút", "Không quá 02 giờ 30 phút"],
+    ["Quy định trang phục của học viên khi tự học ở nhà tại Điều 7 Quyết định 1700/QĐ-HV là?", "Mặc quần dài, áo lót", "Mặc tác phong theo mùa", "Mặc quần áo dài", "Tùy ý đơn vị"],
+    ["Quân số của phân đội trực chiến cấp học viện tại khu A - Hà Nội gồm bao nhiêu đồng chí?", "71 đồng chí", "70 đồng chí", "73 đồng chí", "75 đồng chí"],
+    ["Tỷ lệ ra vào trong giờ nghỉ ngày làm việc đối với học viên đào tạo dài hạn cấp phân đội năm thứ 2 là?", "Tỷ lệ không quá 10%", "Tỷ lệ không quá 20%", "Tỷ lệ không quá 30%", "Tỷ lệ không quá 25%"],
+    ["Mục đích chính của Khung kiến thức, kỹ năng số trong Quyết định 3039/QĐ-BQP là gì?", "Xác định và mô tả các kiến thức, kỹ năng số cần thiết cho mọi quân nhân", "Đo lường chỉ số phát triển công nghệ", "Tiêu chuẩn kỹ thuật thiết bị", "Cung cấp phần mềm học tập"],
+    ["Hành vi nào sau đây bị nghiêm cấm theo pháp luật về an toàn thông tin mạng?", "Thu thập, sử dụng thông tin cá nhân khi chưa được sự đồng ý", "Sao lưu dữ liệu hệ thống", "Cài phần mềm diệt virus", "Chia sẻ mật khẩu cho chỉ huy"],
+    ["Phishing (lừa đảo trực tuyến) là hành vi nào?", "Gửi email giả mạo để lấy thông tin cá nhân", "Kiểm tra tốc độ mạng", "Sao lưu dữ liệu", "Cài đặt phần mềm diệt virus"],
+
+    // Lĩnh vực Khoa học quân sự [cite: 3]
+    ["Đâu không phải là mục tiêu hoạt động NCKH của học viên, sinh viên?", "Bảo đảm chỉ tiêu khen thưởng cho các cá nhân và tập thể", "Hình thành năng lực NCKH", "Nâng cao chất lượng đào tạo", "Nâng cao kinh nghiệm thực tế"],
+    ["Vai trò của tiểu đoàn, hệ quản lý học viên trong việc đăng ký đề tài NCKH của học viên?", "Triển khai cho học viên đăng ký theo mẫu; tổng hợp báo cáo danh sách gửi về Phòng KHQS", "Đề xuất danh mục đề tài", "Đôn đốc học viên nộp phiếu", "Kiểm tra nội dung nghiên cứu"],
+    ["Điểm tối đa được chấm cho đề tài NCKH khi có công bố khoa học, sản phẩm vật lý là:", "15", "10", "5", "20"],
+    ["Tập thể lớp được khen thưởng Giấy khen về NCKH khi có ít nhất mấy đề tài được khen thưởng?", "Ít nhất 01 đề tài", "Ít nhất 02 đề tài", "Ít nhất 03 đề tài", "Không yêu cầu"],
+    ["Khái niệm “Khoa học” là gì?", "Là hệ thống tri thức về bản chất, quy luật tồn tại và phát triển của sự vật, hiện tượng tự nhiên, xã hội và tư duy", "Là tập hợp giải pháp kỹ thuật", "Là quy trình công cụ", "Là hoạt động tạo sản phẩm mới"],
+    ["Nghị quyết về đột phá phát triển KHCN, đổi mới sáng tạo và chuyển đổi số trong Học viện là:", "Nghị quyết số 2040-NQ/ĐU ngày 20/3/2025", "Nghị quyết số 3488-NQ/QUTW", "Nghị quyết số 3488-NQ/ĐU", "Nghị quyết số 2040-NQ/QUTW"],
+    ["Quyết định thành lập các Hội đồng nghiệm thu đề tài NCKH học viên thuộc thẩm quyền của:", "Giám đốc Học viện", "Chính uỷ Học viện", "Phó Giám đốc Học viện", "Trưởng phòng Khoa học quân sự"],
+
+    // Các câu bổ sung để đủ 60 câu từ các nguồn trên
+    ["Học viên nợ bao nhiêu tín chỉ thì bị thôi học theo Quy chế 4421?", "≥25 TC", "≥20 TC", "≥15 TC", "≥30 TC"],
+    ["Học viên là lớp trưởng được cộng bao nhiêu điểm vào điểm TBHK để xét học bổng?", "0,1 điểm", "0,2 điểm", "0,15 điểm", "0,3 điểm"],
+    ["Theo Quy định 285, mức độ vi phạm AI nào thì người dùng bị xử lý kỷ luật khiển trách?", "Vi phạm nghiêm trọng hoặc tái phạm nhiều lần (02 lần trở lên)", "Vi phạm lần đầu", "Vi phạm nhẹ", "Vi phạm đặc biệt nghiêm trọng"],
+    ["Khi thực hiện nhiệm vụ bám lớp, cán bộ bám lớp sẽ bị khiển trách nếu vi phạm hành vi nào?", "Làm việc riêng hoặc có các hành động ảnh hưởng đến lớp học", "Quên mang sổ ghi chép", "Đến muộn 5 phút", "Không mặc quân phục"],
+    ["Cơ quan nào chủ trì lấy ý kiến phản hồi từ người học về hoạt động giảng dạy?", "Phòng Đào tạo (P2)", "Phòng KHQS (P13)", "Phòng Chính trị (P7)", "Ban Khảo thí (P12)"],
+    ["Theo quy định 5205, phòng làm việc của Chỉ huy Đại đội có được lắp điều hòa không?", "Không", "Có", "Tùy điều kiện", "Chỉ ở khu A"],
+    ["Đối với học viên đào tạo thạc sĩ, học phần đạt yêu cầu khi có điểm tối thiểu là bao nhiêu?", "5,5 điểm", "5,0 điểm", "4,0 điểm", "6,0 điểm"],
+    ["Học viên lưu ban theo Quy chế 4421 có được bảo lưu kết quả năm học trước không?", "Không", "Có", "Chỉ môn trên 7.0", "Chỉ môn trên 8.0"],
+    ["Chế độ trực chỉ huy của đại đội trong ngày làm việc do ai đảm nhiệm?", "Lớp trưởng, đại đội trưởng, chính trị viên đảm nhiệm", "Chỉ lớp trưởng", "Chỉ đại đội trưởng", "Phó đại đội trưởng"],
+    ["Thời gian Trực ban nội vụ đơn vị báo cáo quân số với Trực ban Học viện hằng ngày là?", "13h00 - 15h00", "13h30 - 15h00", "13h30 - 15h30", "14h00 - 15h00"],
+    ["Học viên đào tạo dài hạn năm thứ 2 được ra ngoài doanh trại Chủ nhật vào khung giờ nào?", "07h30 - 21h00", "07h00 - 20h30", "07h30 - 20h30", "07h00 - 21h00"],
+    ["Tỷ lệ nghỉ tranh thủ tối đa đối với học viên là sĩ quan, QNCN là bao nhiêu?", "Không quá 80%", "Không quá 70%", "Không quá 75%", "Không quá 65%"],
+    ["Thẩm quyền giải quyết cho học viên nghỉ tranh thủ qua đêm thuộc về cấp nào?", "Chỉ huy hệ, tiểu đoàn", "Thủ trưởng Học viện", "Chỉ huy đại đội", "Chỉ huy trung đội"],
+    ["Thời gian điểm danh hoặc điểm quân số của đơn vị theo quy định không quá bao nhiêu phút?", "30 phút", "20 phút", "25 phút", "15 phút"],
+    ["Ai là người nắm vững chế độ tiêu chuẩn quân lương của từng đối tượng trong đơn vị?", "Người chỉ huy", "Quản lý bếp", "Trực ban đơn vị", "Kinh tế trưởng"],
+    ["Đại đội trưởng được quyền xử lý kỷ luật cảnh cáo đến cấp nào?", "Trung đội trưởng", "Tiểu đội trưởng", "Chiến sĩ", "Phó đại đội trưởng"],
+    ["Trình tự, thủ tục chung xử lý kỷ luật quân đội gồm có mấy bước?", "5 bước", "4 bước", "6 bước", "7 bước"],
+    ["Khi nhận được file lạ từ email trong môi trường quân đội, hành động đúng là gì?", "Quét virus hoặc xóa", "Mở ngay để xem", "Chia sẻ với đồng đội", "Lưu vào ổ cứng"]
+];
+
+let scoreCount = 0;
+
+function shuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+}
+
+function initQuiz() {
+    scoreCount = 0;
+    document.getElementById('score').innerText = "Đúng: 0 / 60";
+    const container = document.getElementById('quiz-container');
+    container.innerHTML = "";
+
+    // Xáo trộn 60 câu hỏi
+    const selected = shuffle([...fullDatabase]);
+
+    selected.forEach((q, idx) => {
+        const correctVal = q[1];
+        const allOpts = shuffle(q.slice(1));
+
+        const block = document.createElement('div');
+        block.className = 'question-block';
+        block.innerHTML = `<div class="question-text">Câu ${idx + 1}: ${q[0]}</div>`;
+
+        const optsDiv = document.createElement('div');
+        optsDiv.className = 'options';
+
+        allOpts.forEach(o => {
+            const item = document.createElement('div');
+            item.className = 'option-item';
+            item.innerText = o;
+            item.onclick = function() {
+                if (block.classList.contains('answered')) return;
+                block.classList.add('answered');
+
+                if (o === correctVal) {
+                    item.classList.add('correct');
+                    item.innerHTML += ' <span class="feedback">✔️ cũng bình thường</span>';
+                    scoreCount++;
+                    document.getElementById('score').innerText = `Đúng: ${scoreCount} / 60`;
+                } else {
+                    item.classList.add('wrong');
+                    item.innerHTML += ' <span class="feedback">❌ Con gà</span>';
+                    // Hiển thị đáp án đúng
+                    Array.from(optsDiv.children).forEach(c => {
+                        if (c.innerText.split(' ✔️')[0] === correctVal) {
+                            c.classList.add('correct');
+                        }
+                    });
+                }
+            };
+            optsDiv.appendChild(item);
+        });
+
+        block.appendChild(optsDiv);
+        container.appendChild(block);
+    });
+    window.scrollTo(0,0);
+}
+
+initQuiz();
+</script>
+
+</body>
+</html>

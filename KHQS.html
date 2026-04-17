@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Chương trình Trắc nghiệm 15 Câu</title>
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f0f2f5; padding: 20px; line-height: 1.6; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #1a5632; border-bottom: 2px solid #1a5632; padding-bottom: 10px; }
+        #score-board { text-align: center; font-size: 20px; font-weight: bold; color: #1a5632; margin: 20px 0; padding: 10px; background: #e8f5e9; border-radius: 8px; }
+        .question-block { margin-bottom: 25px; padding: 15px; border: 1px solid #ddd; border-radius: 8px; transition: 0.3s; }
+        .question-text { font-weight: bold; margin-bottom: 12px; color: #333; }
+        .options { display: flex; flex-direction: column; gap: 8px; }
+        .option-item { padding: 10px 15px; border: 1px solid #ccc; border-radius: 5px; cursor: pointer; background: #fff; transition: 0.2s; }
+        .option-item:hover { background: #f1f1f1; }
+        .correct { background-color: #d4edda !important; border-color: #28a745 !important; color: #155724; font-weight: bold; }
+        .wrong { background-color: #f8d7da !important; border-color: #dc3545 !important; color: #721c24; font-weight: bold; }
+        .feedback { font-style: italic; margin-left: 10px; }
+        .btn-reset { display: block; width: 220px; margin: 30px auto; padding: 12px; background: #1a5632; color: white; border: none; border-radius: 25px; cursor: pointer; font-size: 16px; font-weight: bold; }
+        .btn-reset:hover { background: #144527; }
+        .answered { pointer-events: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>HỆ THỐNG TRẮC NGHIỆM TỔNG HỢP</h1>
+    <div id="score-board">Điểm của bạn: 0/15</div>
+    <div id="quiz-area"></div>
+    <button class="btn-reset" onclick="startNewQuiz()">Làm mới (Reset)</button>
+</div>
+
+<script>
+// Dữ liệu tổng hợp từ các file đã cung cấp
+const allQuestions = [
+    ["Hiện nay, Học viện đang áp dụng bao nhiêu quy chế đào tạo trình độ đại học chính quy?", "2", "1", "3", "4"],
+    ["Điểm các học phần tốt nghiệp được coi là đạt từ:", "≥5,5 điểm", "≥5,0 điểm", "≥4,0 điểm", "≥5,4 điểm"],
+    ["Theo Quy chế 7349, điểm học phần thi lại đạt tối đa là bao nhiêu?", "5,0 điểm", "6,9 điểm", "5,5 điểm", "Không giới hạn"],
+    ["Điểm trung bình năm học (TBNH) của học viên đạt bao nhiêu thì bị lưu ban?", "Điểm TBNH < 5,0", "Điểm TBNH < 5,5", "Điểm TBNH < 6,5", "Điểm TBNH < 6,0"],
+    ["Học viên có điểm trung bình học kỳ (TBHK) bao nhiêu thì bị thôi học?", "Bằng 0 (không lý do chính đáng)", "≤4,0 điểm", "≤5,0 điểm", "≤5,5 điểm"],
+    ["Thời gian học tập trên lớp đạt bao nhiêu % mới được thi kết thúc học phần?", "80%", "70%", "75%", "60%"],
+    ["Học viên đến chậm giờ thi bao lâu thì bị cấm thi?", "Từ 15 phút trở lên", "Từ 05 phút trở lên", "Từ 10 phút trở lên", "Từ 20 phút trở lên"],
+    ["Một năm Học viện tổ chức xét cấp học bổng cho học viên mấy lần?", "2", "1", "3", "4"],
+    ["Đâu không phải là mục tiêu hoạt động NCKH của học viên, sinh viên?", "Bảo đảm chỉ tiêu khen thưởng cho các cá nhân và tập thể", "Hình thành năng lực NCKH", "Nâng cao chất lượng đào tạo", "Nâng cao kinh nghiệm thực tế"],
+    ["Điểm tối đa chấm cho đề tài NCKH khi có công bố khoa học, sản phẩm vật lý là:", "10", "5", "15", "20"],
+    ["Khái niệm 'Khoa học' là gì?", "Hệ thống tri thức về bản chất, quy luật tồn tại và phát triển của sự vật, hiện tượng tự nhiên, xã hội và tư duy", "Tập hợp các giải pháp kỹ thuật", "Quy trình công cụ", "Hệ thống tri thức về tự nhiên"],
+    ["Cơ quan tham mưu về công tác khoa học quân sự cho Bộ Quốc phòng?", "Cục Khoa học quân sự", "Tổng cục Khoa học quân sự", "Phòng Khoa học quân sự", "Ban Khoa học quân sự"],
+    ["Quyết định thành lập các Hội đồng nghiệm thu đề tài NCKH học viên thuộc thẩm quyền của:", "Giám đốc Học viện", "Chính uỷ Học viện", "Phó Giám đốc Học viện", "Trưởng phòng Khoa học quân sự"],
+    ["Khái niệm 'Công nghệ' là gì?", "Tập hợp các giải pháp kỹ thuật, quy trình, công cụ, bí quyết... để biến đổi nguồn lực thành sản phẩm", "Hệ thống tri thức quy luật", "Hoạt động tạo sản phẩm mới", "Mô hình kinh doanh mới"],
+    ["Nghị quyết số 2040-NQ/ĐU ngày 20/3/2025 gồm mấy nhóm nhiệm vụ, giải pháp?", "7", "5", "6", "8"],
+    ["Theo Quy chế 4421, học viên nợ bao nhiêu tín chỉ thì bị lưu ban?", "≥11 TC", ">10 TC", ">9 TC", "<12 TC"],
+    ["Học viên là lớp trưởng được cộng bao nhiêu điểm TBHK để xét học bổng?", "0,1 điểm", "0,2 điểm", "0,15 điểm", "0,3 điểm"],
+    ["Trọng số điểm chuyên cần, thường xuyên và thi kết thúc học phần là:", "1; 2; 7", "1; 3; 6", "1; 1; 8", "1; 4; 5"],
+    ["Khái niệm 'Đổi mới sáng tạo' là gì?", "Hoạt động tạo ra sản phẩm mới, quy trình mới hoặc cải tiến đáng kể so với cái đã có", "Hoạt động sao chép kết quả", "Hệ thống tri thức cũ", "Dịch vụ cũ"],
+    ["Theo Quy chế 4421, học viên được phép lưu ban mấy lần trong toàn khóa?", "01 lưu ban", "02 lưu ban", "03 lưu ban", "Không giới hạn"]
+];
+
+let score = 0;
+
+function shuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+}
+
+function startNewQuiz() {
+    score = 0;
+    document.getElementById('score-board').innerText = "Điểm của bạn: 0/15";
+    const quizArea = document.getElementById('quiz-area');
+    quizArea.innerHTML = "";
+
+    // Lấy ngẫu nhiên 15 câu từ ngân hàng câu hỏi
+    const selectedQuestions = shuffle([...allQuestions]).slice(0, 15);
+
+    selectedQuestions.forEach((q, index) => {
+        const questionText = q[0];
+        const correctAnswer = q[1];
+        const allOptions = shuffle(q.slice(1));
+
+        const qBlock = document.createElement('div');
+        qBlock.className = 'question-block';
+        qBlock.innerHTML = `<div class="question-text">Câu ${index + 1}: ${questionText}</div>`;
+
+        const optionsDiv = document.createElement('div');
+        optionsDiv.className = 'options';
+
+        allOptions.forEach(opt => {
+            const optBtn = document.createElement('div');
+            optBtn.className = 'option-item';
+            optBtn.innerText = opt;
+
+            optBtn.onclick = function() {
+                if (qBlock.classList.contains('answered')) return;
+                qBlock.classList.add('answered');
+
+                if (opt === correctAnswer) {
+                    optBtn.classList.add('correct');
+                    optBtn.innerHTML += ' <span class="feedback">✔️ cũng bình thường</span>';
+                    score++;
+                    document.getElementById('score-board').innerText = `Điểm của bạn: ${score}/15`;
+                } else {
+                    optBtn.classList.add('wrong');
+                    optBtn.innerHTML += ' <span class="feedback">❌ Con gà</span>';
+                    // Hiển thị đáp án đúng
+                    Array.from(optionsDiv.children).forEach(child => {
+                        if (child.innerText.split(' ✔️')[0] === correctAnswer) {
+                            child.classList.add('correct');
+                        }
+                    });
+                }
+            };
+            optionsDiv.appendChild(optBtn);
+        });
+
+        qBlock.appendChild(optionsDiv);
+        quizArea.appendChild(qBlock);
+    });
+    window.scrollTo(0,0);
+}
+
+// Khởi chạy
+startNewQuiz();
+</script>
+
+</body>
+</html>

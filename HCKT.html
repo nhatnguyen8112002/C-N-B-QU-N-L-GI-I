@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Trắc Nghiệm Hậu Cần - Kỹ Thuật</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #e8f5e9; padding: 20px; line-height: 1.6; }
+        .container { max-width: 850px; margin: auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        h1 { text-align: center; color: #2e7d32; text-transform: uppercase; border-bottom: 2px solid #2e7d32; padding-bottom: 10px; }
+        #score { text-align: center; font-size: 22px; font-weight: bold; color: #1b5e20; margin-bottom: 20px; background: #c8e6c9; padding: 10px; border-radius: 8px; }
+        .question-block { margin-bottom: 30px; padding: 20px; border: 1px solid #c8e6c9; border-radius: 10px; background: #fafafa; }
+        .question-text { font-weight: bold; margin-bottom: 15px; color: #333; font-size: 17px; }
+        .options { display: flex; flex-direction: column; gap: 10px; }
+        .option-item { padding: 12px 15px; border: 1px solid #ccc; border-radius: 6px; cursor: pointer; transition: all 0.2s; background: white; }
+        .option-item:hover { background-color: #f1f8e9; border-color: #2e7d32; }
+        
+        .correct { background-color: #4caf50 !important; color: white !important; border-color: #388e3c !important; font-weight: bold; }
+        .wrong { background-color: #f44336 !important; color: white !important; border-color: #d32f2f !important; font-weight: bold; }
+        
+        .feedback { font-weight: bold; margin-left: 10px; text-decoration: underline; }
+        .btn-reset { display: block; width: 250px; margin: 30px auto; padding: 15px; background: #2e7d32; color: white; border: none; border-radius: 30px; cursor: pointer; font-size: 18px; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .btn-reset:hover { background: #1b5e20; transform: translateY(-2px); }
+        .answered { pointer-events: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>TRẮC NGHIỆM HẬU CẦN - KỸ THUẬT</h1>
+    <div id="score">Điểm: 0/22</div>
+    <div id="quiz-container"></div>
+    <button class="btn-reset" onclick="initQuiz()">Làm lại từ đầu (Reset)</button>
+</div>
+
+<script>
+const rawDataHCKT = [
+    ["Quy định an toàn khi khi cất giữ vũ khí?", "Nơi cất giữ phải bảo đảm an toàn. Thực hiện cất giữ chìa khoá kho, tủ súng theo quy định.", "Lắp đạn vào súng, tháo áo súng và thực hiện tốt chế độ bảo quản thường xuyên.", "Súng huấn luyện, súng sẵn sàng chiến đấu, súng niêm cất phải sắp xếp, cất giữ chung với nhau.", "Giao chìa khóa tủ súng cho 1 đồng chí chỉ huy đơn vị cất giữ."],
+    ["Cấm sử dụng những loại đạn nào sau đây?", "Đạn không rõ nguồn gốc, xuất xứ, nghi ngờ về chất lượng, đạn thuộc lô nguy hiểm thông báo cấm dùng của cơ quan nghiệp vụ.", "Đạn đã được kiểm tra kỹ thuật, phân cấp chất lượng đạt cấp 2.", "Đạn mới được sản xuất, còn nguyên trong hòm hộp.", "Đạn có nguồn gốc, xuất xứ, rõ ràng, chất lượng tốt."],
+    ["Chìa khóa trên tủ súng và chìa khóa vòng cò do ai quản lý (theo HD 94)?", "Trực ban Hệ, Tiểu đoàn", "Trực chỉ huy Hệ, Tiểu đoàn", "Hệ trưởng, Tiểu đoàn trưởng", "Phó Hệ trưởng, Phó Tiểu đoàn trưởng"],
+    ["Vũ khí, trang bị kỹ thuật phải được quản lý theo nguyên tắc nào?", "Tập trung, thống nhất", "Phân tán theo nhu cầu", "Giao khoán cá nhân", "Linh hoạt từng đơn vị"],
+    ["Kiểm tra kỹ thuật nhằm mục đích chủ yếu nào?", "Phát hiện, đánh giá tình trạng VKTBKT", "Đánh giá cán bộ", "Phục vụ thanh tra", "Thống kê số lượng"],
+    ["Vũ khí, trang bị kỹ thuật khi đưa vào sử dụng phải bảo đảm yêu cầu nào?", "Đồng bộ, an toàn, đủ hồ sơ", "Đủ số lượng", "Đúng thời gian", "Phù hợp điều kiện sử dụng"],
+    ["Thứ tự các bước bảo quản hàng ngày vũ khí bộ binh?", "Chuẩn bị dụng cụ, nguyên vật liệu bảo quản; Tập hợp đội hình, kiểm tra an toàn súng; Lau chùi bên ngoài súng; Tháo vũ khí theo quy định; Lau chùi, kiểm tra, bôi dầu mỡ các bộ phận theo quy định; Lắp vũ khí, kiểm tra chuyển động, đồng bộ của súng; Thu dọn dụng cụ, vật liệu bảo quản; Xếp súng vào tủ hoặc trên giá.", "Lau chùi bên ngoài; Tháo vũ khí theo quy định; Lau chùi, kiểm tra, bôi dầu mỡ các bộ phận theo quy định; Lắp vũ khí, kiểm tra chuyển động, đồng bộ của súng; Thu dọn dụng cụ, vật liệu bảo quản; Xếp súng vào tủ hoặc trên giá.", "Tháo vũ khí theo quy định; Lau chùi bên ngoài súng; Lau chùi, kiểm tra, bôi dầu mỡ các bộ phận theo quy định; Lắp vũ khí, kiểm tra chuyển động, đồng bộ của súng; Thu dọn dụng cụ, vật liệu bảo quản; Xếp súng vào tủ hoặc trên giá.", "Chuẩn bị dụng cụ, nguyên vật liệu bảo quản; Tập hợp đội hình, kiểm tra an toàn súng; Lau chùi bên ngoài súng; Tháo vũ khí theo quy định; Lau chùi, kiểm tra, bôi dầu mỡ các bộ phận theo quy định; Lắp vũ khí, kiểm tra chuyển động, đồng bộ của súng."],
+    ["Theo Nghị định 76/2016/NĐ-CP, tiêu chuẩn doanh cụ phòng cán bộ chỉ huy cấp tiểu đoàn KHÔNG có loại nào?", "Bàn họp", "Bàn ghế tiếp khách", "Tủ áo", "Tủ tài liệu"],
+    ["Định mức sử dụng điện năng cho sinh hoạt của Học viên quân sự đào tạo dài hạn là bao nhiêu?", "41KWh/người/tháng", "40KWh/người/tháng", "42KWh/người/tháng", "43KWh/người/tháng"],
+    ["Theo quy định 5205, Hệ, Tiểu đoàn được bảo đảm điều hòa tại những phòng nào?", "Phòng giao ban, phòng chỉ huy Hệ, Tiểu đoàn.", "Phòng sinh hoạt chung, phòng chỉ huy Hệ, Tiểu đoàn.", "Phòng giao ban, phòng làm việc của Chỉ huy đại đội, Hệ, Tiểu đoàn", "Phòng trực ban, phòng giao ban, phòng sinh hoạt chung."],
+    ["Quy định 02/QyĐ-HV về quản lý sử dụng nhà ở công vụ áp dụng cho đối tượng nào?", "Cán bộ, nhân viên chưa được giải quyết tiêu chuẩn nhà ở, đất ở.", "Sĩ quan.", "Sĩ quan và quân nhân chuyên nghiệp.", "Các cơ quan, đơn vị."],
+    ["Tiền ăn cơ bản của chiến sỹ bộ binh theo Thông tư 96/2025 là bao nhiêu?", "81.000đ", "72.000đ", "65.000đ", "101.000đ"],
+    ["Chế độ điểm nghiệm quân trang cấp đại đội quy định như thế nào?", "3 tháng/1 lần", "1 tuần/1 lần.", "1 tháng/1 lần.", "6 tháng/1 lần"],
+    ["Tỷ lệ nuôi quân phục vụ đối với bếp dBB đủ quân (TT 38/2017)?", "1 nuôi quân phục vụ 25 người ăn.", "1 nuôi quân phục vụ 30 người ăn.", "1 nuôi quân phục vụ 20 người ăn.", "1 nuôi quân phục vụ 22 người ăn."],
+    ["Có bao nhiêu điều quy định vệ sinh an toàn thực phẩm trong quân đội?", "10 điều.", "8 điều.", "9 điều.", "11 điều."],
+    ["Quân nhân và CNVCQP được ăn thêm bao nhiêu ngày lễ, tết (TT 96/2025)?", "12 ngày.", "10 ngày.", "11 ngày.", "13 ngày."],
+    ["Chọn phương án đúng về bệnh Sốt xuất huyết Dengue:", "Bệnh sốt xuất huyết Dengue không lây truyền trực tiếp từ người sang người mà do muỗi là trung gian truyền bệnh. Muỗi Aedes đốt người bệnh có mang vi rút, sau đó truyền vi rút sang người lành qua vết đốt.", "Bệnh sốt xuất huyết Dengue không lây truyền trực tiếp từ người sang người mà do muỗi là trung gian truyền bệnh. Muỗi Anopheles đốt người bệnh.", "Muỗi Culex đốt người bệnh có mang vi rút, sau đó truyền vi rút sang người lành qua vết đốt.", "Bệnh sốt xuất huyết Dengue lây truyền trực tiếp từ người sang người."],
+    ["Thứ tự quan trọng các biện pháp phòng chống sốt xuất huyết tại đơn vị?", "1. Loại bỏ nơi muỗi đẻ trứng; 2. Diệt bọ gậy; 3. Phòng tránh muỗi đốt; 4. Phun thuốc.", "1. Diệt bọ gậy; 2. Loại bỏ nơi muỗi đẻ trứng; 3. Phòng tránh muỗi đốt; 4. Phun thuốc.", "1. Phun thuốc; 2. Diệt bọ gậy; 3. Loại bỏ nơi muỗi đẻ; 4. Phòng tránh muỗi đốt.", "1. Phòng tránh muỗi đốt; 2. Diệt bọ gậy; 3. Loại bỏ nơi muỗi đẻ; 4. Phun thuốc."],
+    ["Dự phòng say nắng, say nóng là nhiệm vụ của lực lượng nào?", "Cơ quan chuyên môn (Phòng HCKT); lực lượng quân y; chỉ huy đơn vị; từng cá nhân.", "Chỉ huy đơn vị; từng cá nhân.", "Nhân viên quân y tại đơn vị; từng cá nhân.", "Cơ quan chuyên môn (Phòng Hậu cần – Kỹ thuật); lực lượng quân y tại đơn vị."],
+    ["Bù nước thế nào là đúng cách để dự phòng say nắng-say nóng?", "Chỉ cho phép luyện tập khi cơ thể cân bằng nước. Bù đủ số lượng nước; uống sớm từng lượng nhỏ, cách nhau 15-20 phút/lần.", "Uống nước khi khát, uống đến khi hết khát.", "Uống từ 0,5 – 1 lít nước trong quá trình luyện tập, lao động.", "Bù đủ số lượng nước trong suốt quá trình luyện tập, lao động, bắt đầu uống nước sớm."],
+    ["Mức độ hiệu quả các thuốc hạ sốt thông thường trong điều trị say nóng-say nắng?", "Các thuốc hạ sốt thông thường (Paracetamol, Nonsteroids) rất ít có hiệu quả trong điều trị say nóng, say nắng.", "Các thuốc hạ sốt thông thường được có hiệu quả trong điều trị say nóng, say nắng.", "Các thuốc hạ sốt thông thường tương đối có hiệu quả trong điều trị say nóng, say nắng.", "Các thuốc hạ sốt thông thường không có hiệu quả trong điều trị say nóng, say nắng."],
+    ["Hoạt động thể lực nào phù hợp để rèn luyện bộ đội thích nghi với nắng nóng có hiệu quả?", "Hoạt động thể lực mức độ vừa trong 10 -14 ngày.", "Hoạt động thể lực nhẹ nhàng trong 10 - 14 ngày.", "Hoạt động thể lực nhẹ nhàng trong 01 tháng.", "Hoạt động thể lực mức độ vừa trong 01 tháng."]
+];
+
+let currentScore = 0;
+
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+}
+
+function initQuiz() {
+    currentScore = 0;
+    document.getElementById('score').innerText = "Điểm: 0/22";
+    const container = document.getElementById('quiz-container');
+    container.innerHTML = "";
+    
+    // Trộn câu hỏi
+    const questions = shuffleArray([...rawDataHCKT]);
+
+    questions.forEach((q, idx) => {
+        const questionText = q[0];
+        const correctAns = q[1];
+        // Trộn đáp án
+        const opts = shuffleArray(q.slice(1));
+
+        const block = document.createElement('div');
+        block.className = 'question-block';
+        block.innerHTML = `<div class="question-text">Câu ${idx + 1}: ${questionText}</div>`;
+
+        const optsDiv = document.createElement('div');
+        optsDiv.className = 'options';
+
+        opts.forEach(o => {
+            const item = document.createElement('div');
+            item.className = 'option-item';
+            item.innerText = o;
+            item.onclick = function() {
+                if (block.classList.contains('answered')) return;
+                block.classList.add('answered');
+                
+                if (o === correctAns) {
+                    item.classList.add('correct');
+                    item.innerHTML += ' <span class="feedback">✔️ cũng bình thường</span>';
+                    currentScore++;
+                    document.getElementById('score').innerText = `Điểm: ${currentScore}/22`;
+                } else {
+                    item.classList.add('wrong');
+                    item.innerHTML += ' <span class="feedback">❌ Con gà</span>';
+                    // Show correct one
+                    Array.from(optsDiv.children).forEach(child => {
+                        if (child.innerText.split(' ✔️')[0] === correctAns) {
+                            child.classList.add('correct');
+                        }
+                    });
+                }
+            };
+            optsDiv.appendChild(item);
+        });
+
+        block.appendChild(optsDiv);
+        container.appendChild(block);
+    });
+    window.scrollTo(0,0);
+}
+
+// Chạy khởi tạo
+initQuiz();
+</script>
+
+</body>
+</html>
